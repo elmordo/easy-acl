@@ -13,19 +13,22 @@ class Role(object):
 
     Args:
         name (str): Role name.
-        parent (Union{Role, None}): Parent role.
+        parents (Union{Iterable{Role}, None}): Parent roles.
         default_permission (Union{Callable, None}): Default permission resolver.
 
     Attributes:
         name (str): Role name.
-        parent (Union{Role, None}): Parent role.
+        parents (Tuple{Role}): Parent roles.
         default_permission (Union{Callable, None}): Default permission resolver.
 
     """
 
-    def __init__(self, name, parent=None, default_permission=None):
+    def __init__(self, name, parents=None, default_permission=None):
+        if parents is None:
+            parents = []
+
         self.__name = name
-        self.__parent = parent
+        self.__parents = tuple(parents)
         self.__default_permission = default_permission
 
     @property
@@ -33,8 +36,8 @@ class Role(object):
         return self.__name
 
     @property
-    def parent(self):
-        return self.__parent
+    def parents(self):
+        return self.__parents
 
     @property
     def default_permission(self):
@@ -61,12 +64,12 @@ class RoleManager(object):
         self._assert_name_not_exists(role.name)
         self._roles.append()
 
-    def create_role(self, name, parent_name=None, default_permission=None):
+    def create_role(self, name, parent_names=None, default_permission=None):
         """Create new role instance, add it to container and return it
 
         Args:
             name (str): Name of the role.
-            parent_name (Union{str, None}): Name of the parent role.
+            parent_names (Union{Iterable{str}, None}): Names of the parent roles.
             default_permission (Union{Callabke, None}): Default permission.
 
         Returns:
@@ -77,12 +80,12 @@ class RoleManager(object):
             ValueError: Parent role not found.
 
         """
-        if parent_name is not None:
-            parent = self.get_role(parent_name)
+        if parent_names is not None:
+            parents = [self.get_role(n) for n in parent_names]
         else:
-            parent = None
+            parents = None
 
-        role = Role(name, parent, default_permission)
+        role = Role(name, parents, default_permission)
         self.add_role(role)
 
         return role
