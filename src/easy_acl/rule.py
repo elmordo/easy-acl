@@ -22,6 +22,11 @@ __copyright__ = "Copyright (c) 2015-2019 Ing. Petr Jindra. All Rights Reserved."
 Result = collections.namedtuple("Result", ["is_allowed", "level"])
 
 
+NESTED_RESOURCE_DELIMITER = "."
+WILDCARD = "*"
+ESCAPE = "\\"
+
+
 class AbstractRule(object):
     """Abstract base for all rules.
 
