@@ -90,6 +90,15 @@ class RoleManager(object):
 
         return role
 
+    def get_names(self):
+        """Get stored role names.
+
+        Returns:
+            List[str]: List of roles.
+
+        """
+        return list(map(lambda x: x.name, self._roles))
+
     def get_role(self, name):
         """Get role by its name.
 
