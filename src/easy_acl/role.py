@@ -47,12 +47,14 @@ class Role(object):
     Args:
         name (str): Role name.
         parents (Optional[Iterable[Role]]): Parent roles.
-        default_permission (Optional[Callable]): Default permission resolver.
+        default_permission (Optional[Callable[[Role, str, int,
+            easy_acl.rule.AbstractRule], bool]]): Default permission resolver.
 
     Attributes:
         name (str): Role name.
         parents (Tuple[Role]): Parent roles.
-        default_permission (Optional[Callable, None]): Default permission resolver.
+        default_permission (Optional[Callable[[Role, str, int,
+            easy_acl.rule.AbstractRule], bool]]): Default permission resolver.
 
     """
 
@@ -106,7 +108,8 @@ class RoleManager(object):
         Args:
             name (str): Name of the role.
             parent_names (Optional[Iterable[str]]): Names of the parent roles.
-            default_permission (Optional[Callabke]): Default permission.
+            default_permission (Optional[Callable[[Role, str, int,
+                easy_acl.rule.AbstractRule], bool]]): Default permission.
 
         Returns:
             Role: New role.
