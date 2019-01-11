@@ -98,7 +98,7 @@ class RoleManager(object):
 
         """
         self._assert_name_not_exists(role.name)
-        self._roles.append()
+        self._roles.append(role)
 
     def create_role(self, name, parent_names=None, default_permission=None):
         """Create new role instance, add it to container and return it
