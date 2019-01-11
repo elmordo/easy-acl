@@ -1,5 +1,37 @@
 # -*- coding: utf-8 -*-
-"""
+"""Role management.
+
+Role structure and management. The base class `Role` can be derived and extended
+by additional properties. All properties of role should be immutable. Each role
+can has none, one or more parents. When access permission is evaluated and there
+is no specific rule of ACL query, parents are evaluated in order of parents sequence.
+
+If no matching rule is found for ACL query, role can has default evaluator. This
+default evaluator is used when no matching rule is found.
+
+The `RoleManager` instance can store multiple roles with unique names. Role list
+can be setup by calling `add_role` method (e.g. when custom class of role is used)
+or by `create_role` method and common `Role` class is used.
+
+Example
+-------
+
+def deny_all(*args, **kwargs):
+    return False
+
+manager = RoleManager()
+
+# guest role is injected by `add_role` method
+guest = Role("guest", default_evaluator=deny_all)
+manager.add_role(guest)
+
+# create user and moderator role
+user = manager.create_role("user")
+moderator = manager.create_role("moderator")
+
+# create admin role inheriting rules from user and moderator
+admin = manager.create_role("admin", parents=[user, moderator])
+
 
 """
 
@@ -8,18 +40,19 @@ from __future__ import absolute_import
 __copyright__ = "Copyright (c) 2015-2019 Ing. Petr Jindra. All Rights Reserved."
 
 
+
 class Role(object):
     """Define one role.
 
     Args:
         name (str): Role name.
-        parents (Union{Iterable{Role}, None}): Parent roles.
-        default_permission (Union{Callable, None}): Default permission resolver.
+        parents (Optional[Iterable[Role]]): Parent roles.
+        default_permission (Optional[Callable]): Default permission resolver.
 
     Attributes:
         name (str): Role name.
-        parents (Tuple{Role}): Parent roles.
-        default_permission (Union{Callable, None}): Default permission resolver.
+        parents (Tuple[Role]): Parent roles.
+        default_permission (Optional[Callable, None]): Default permission resolver.
 
     """
 
@@ -57,6 +90,9 @@ class RoleManager(object):
     def add_role(self, role):
         """Add existing role instance.
 
+        Args:
+            role (Role): Role to add.
+
         Raises:
             AssertionError: Role name is not unique.
 
@@ -69,8 +105,8 @@ class RoleManager(object):
 
         Args:
             name (str): Name of the role.
-            parent_names (Union{Iterable{str}, None}): Names of the parent roles.
-            default_permission (Union{Callabke, None}): Default permission.
+            parent_names (Optional[Iterable[str]]): Names of the parent roles.
+            default_permission (Optional[Callabke]): Default permission.
 
         Returns:
             Role: New role.
