@@ -92,3 +92,42 @@ class AbstractRule(object):
 
         """
         return self.__evaluator(role, resource, match_level, self)
+
+
+class Simple(AbstractRule):
+    """Simple rule matches resource strictly against rule defintion by `==`
+    operator.
+
+    No wildcards are supported (any wildcard is interpreted as part of the
+    resource name). Result of the `_match_resource` method is always 0 (zero)
+    or raise ValueError.
+
+    Example:
+        ...
+        rule = Simple('my-resource', some_evaluator)
+
+        r = rule.resolve(some_role, 'my-resource')
+        # the `r` contains result with level=0
+
+        x = rule.resolve(some_role, 'other-resource')
+        # raise ValueError
+
+    """
+
+    def _match_resource(self, resource):
+        """Match resource to definition by `==` operator.
+
+        Args:
+            resource (str): Resource to match.
+
+        Returns:
+            int: Always 0 (zero).
+
+        Raises:
+            ValueError: Resource does not match to the definition.
+
+        """
+        if self.definition == resource:
+            return 0
+        else:
+            raise ValueError()
