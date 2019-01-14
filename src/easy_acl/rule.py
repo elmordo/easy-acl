@@ -67,7 +67,7 @@ class AbstractRule(object):
         """
         match_level = self._match_resource(resource)
         is_allowed = self._evaluate(role, resource, match_level)
-        return Result()
+        return Result(is_allowed, match_level)
 
     def _match_resource(self, resource):
         """Match resource against the rule.
