@@ -15,11 +15,88 @@ Result of a rule is `Result` instance (named tuple) with two attributes:
 from __future__ import absolute_import
 
 import collections
+import operator
 
 __copyright__ = "Copyright (c) 2015-2019 Ing. Petr Jindra. All Rights Reserved."
 
 
 Result = collections.namedtuple("Result", ["is_allowed", "level"])
+
+
+class RuleList(object):
+
+    def __init__(self):
+        self.__rules = []
+
+    @property
+    def rules(self):
+        return self.__rules
+
+    def get_best_result(self, role, resource):
+        """Return the best matching result or None, if no matching result was
+        found.
+
+        Args:
+            role (easy_acl.role.Role): Role.
+            resource (str): Resource to match.
+
+        Returns:
+            Optional[Result]: The best matching result or None if no result match.
+
+        """
+        matching_results = self._get_matching_result_candidates(role, resource)
+        return self._get_best_result(matching_results)
+
+    def _get_matching_result_candidates(self, role, resource):
+        """Find candidates for the best result.
+
+        Return list of candidates. If there is some result with level equal to
+        zero, list with this item only is returned.
+
+        Args:
+            role (easy_acl.role.Role): Role instance.
+            resource (str): Resource name to test against.
+
+        Returns:
+            List[Result]: List of matching results.
+
+        """
+        matching_results = []
+
+        for r in self.__rules:
+            try:
+                result = r.resolve(role, resource)
+            except ValueError:
+                # rule does not match
+                continue
+
+            if result.level == 0:
+                # exact match - return it
+                return [result]
+
+            matching_results.append(result)
+
+        return matching_results
+
+    def _get_best_result(self, results):
+        """Get the best result.
+
+        Args:
+            results (List[Result]): Result list.
+
+        Returns:
+            Optional[Result]: Return the best result or None if there is no
+                candidate.
+
+        """
+        # get the first
+        if len(results) > 1:
+            results.sort(key=operator.attrgetter("level"))
+            return results[0]
+        elif len(results) == 1:
+            return results[0]
+        else:
+            return None
 
 
 class AbstractRule(object):
