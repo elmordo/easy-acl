@@ -62,7 +62,7 @@ class Acl(object):
 
         """
         role = self.__roles.get_role(role_name)
-        self.__rules[role].append(rule)
+        self.__rules[role].rules.append(rule)
 
     def is_allowed(self, role_name, resource):
         """Test if access to the resource is allowed for role defined by its name.
@@ -115,7 +115,7 @@ class Acl(object):
         result = self._search_for_best_rule_result(role, resource)
 
         if not result:
-            result = self._get_default_permission(role)
+            result = self._get_default_permission(role, resource)
 
         return result.is_allowed
 
@@ -144,10 +144,11 @@ class Acl(object):
 
             current_result = rules.get_best_result(current_role, resource)
 
-            if current_result.level == 0:
-                return current_result
-            elif best_result is None or best_result.level > current_result:
-                best_result = current_result
+            if current_result is not None:
+                if current_result.level == 0:
+                    return current_result
+                elif best_result is None or best_result.level > current_result:
+                    best_result = current_result
 
         return best_result
 
@@ -167,7 +168,7 @@ class Acl(object):
         """
         evaluator = self._get_default_evaluator(role)
         is_allowed = evaluator(role, resource, 0, None)
-        return rules.Result(is_allowed, sys.maxint)
+        return rules.Result(is_allowed, sys.maxsize)
 
     def _get_default_evaluator(self, role):
         """Get default permission evaluator.
