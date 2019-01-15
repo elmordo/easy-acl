@@ -51,11 +51,11 @@ def instance():
 
 def setup_roles(acl):
     user = roles.Role("user")
-    moderator = roles.Role("moderator", default_evaluator=evaluators.allow)
-    admin = roles.Role("admin", parents=(user, moderator))
+    presenter = roles.Role("presenter", default_evaluator=evaluators.allow)
+    admin = roles.Role("admin", parents=(user, presenter))
 
     acl.roles.add_role(user)
-    acl.roles.add_role(moderator)
+    acl.roles.add_role(presenter)
     acl.roles.add_role(admin)
 
 

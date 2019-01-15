@@ -25,12 +25,12 @@ manager = RoleManager()
 guest = Role("guest", default_evaluator=deny_all)
 manager.add_role(guest)
 
-# create user and moderator role
+# create user and presenter role
 user = manager.create_role("user")
-moderator = manager.create_role("moderator")
+presenter = manager.create_role("presenter")
 
-# create admin role inheriting rules from user and moderator
-admin = manager.create_role("admin", parents=[user, moderator])
+# create admin role inheriting rules from user and presenter
+admin = manager.create_role("admin", parents=[user, presenter])
 
 
 """
