@@ -30,3 +30,13 @@ def test_resolve():
 
     with pytest.raises(NotImplementedError):
         instance.resolve(mock.Mock(), "foo-bar")
+
+
+def test_split_resource_to_parts_simple():
+    """Split simple resource name to parts.
+
+    """
+    name = "foo.bar.foo-bar"
+    expected = ("foo", "bar", "foo-bar")
+    splitted = rule.AbstractRule.split_resource_to_parts(name)
+    assert splitted == expected

@@ -22,11 +22,6 @@ __copyright__ = "Copyright (c) 2015-2019 Ing. Petr Jindra. All Rights Reserved."
 Result = collections.namedtuple("Result", ["is_allowed", "level"])
 
 
-NESTED_RESOURCE_DELIMITER = "."
-WILDCARD = "*"
-ESCAPE = "\\"
-
-
 class AbstractRule(object):
     """Abstract base for all rules.
 
@@ -42,9 +37,14 @@ class AbstractRule(object):
 
     """
 
+    RESOURCE_PART_DELIMITER = "."
+    WILDCARD = "*"
+    ESCAPE = "\\"
+
     def __init__(self, definition, evaluator):
         self.__definition = definition
         self.__evaluator = evaluator
+        self._setup()
 
     @property
     def definition(self):
@@ -53,6 +53,19 @@ class AbstractRule(object):
     @property
     def evaluator(self):
         return self.__evaluator
+
+    @classmethod
+    def split_resource_to_parts(cls, resource_name):
+        """Split resource name to the parts.
+
+        Args:
+            resource_name (str): Resource name to split.
+
+        Returns:
+            Tuple[str]: Resource parts.
+
+        """
+        return tuple(resource_name.split(cls.RESOURCE_PART_DELIMITER))
 
     def resolve(self, role, resource):
         """Try to resolve rule against resource.
@@ -98,6 +111,12 @@ class AbstractRule(object):
         """
         return self.__evaluator(role, resource, match_level, self)
 
+    def _setup(self):
+        """Setup the instance.
+
+        """
+        pass
+
 
 class Simple(AbstractRule):
     """Simple rule matches resource strictly against rule defintion by `==`
@@ -136,3 +155,59 @@ class Simple(AbstractRule):
             return 0
         else:
             raise ValueError()
+
+
+class WildcardEnding(Simple):
+    """Resource is possible to end with wildcard.
+
+    Attributes:
+        has_wildcard (bool): True, if there is wildcard at the end
+        definition_parts (Tuple[str]): Parts of the definition.
+
+    """
+
+    @property
+    def has_wildcard(self):
+        return self.__has_wildcard
+
+    @property
+    def definition_parts(self):
+        return self.__definition_parts
+
+    def _setup(self):
+        self.__definition_parts = self.split_resource_to_parts(self.definition)
+
+        try:
+            self.__has_wildcard = self.__definition_parts[-1] == self.WILDCARD
+        except IndexError:
+            self.__has_wildcard = False
+
+    def _match_resource(self, resource):
+        """Match resource to definition by `==` operator.
+
+        Args:
+            resource (str): Resource to match.
+
+        Returns:
+            int: Match level (0 if wildcard is not used, 1 minimal if there is
+                wildcard in definition).
+
+        Raises:
+            ValueError: Resource does not match to the definition.
+
+        """
+        if self.__has_wildcard:
+            parts = self.split_resource_to_parts(resource)
+
+            if len(parts) < len(self.__definition_parts):
+                raise ValueError()
+
+            for i, dp in enumerate(self.__definition_parts[:-1]):
+                if parts[i] != dp:
+                    # not match
+                    raise ValueError()
+
+            return len(parts) - len(self.__definition_parts) + 1
+        else:
+            # no wildcard is set - match same as simple rule
+            return super(WildcardEnding, self)._match_resource(resource)
