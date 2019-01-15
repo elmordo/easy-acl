@@ -76,12 +76,12 @@ def test_create_role_with_args(manager):
     manager.create_role(p2)
 
     parents = (p1, p2)
-    default_permission = mock.Mock()
+    default_evaluator = mock.Mock()
 
     name = "foobar"
-    r = manager.create_role(name, parents, default_permission)
+    r = manager.create_role(name, parents, default_evaluator)
 
-    assert_role(r, name, parents, default_permission)
+    assert_role(r, name, parents, default_evaluator)
 
     names = manager.get_names()
     assert len(names) == 3
@@ -98,12 +98,12 @@ def test_create_role_with_kwargs(manager):
     manager.create_role(p2)
 
     parents = (p1, p2)
-    default_permission = mock.Mock()
+    default_evaluator = mock.Mock()
 
     name = "foobar"
-    r = manager.create_role(name, parent_names=parents, default_permission=default_permission)
+    r = manager.create_role(name, parent_names=parents, default_evaluator=default_evaluator)
 
-    assert_role(r, name, parents, default_permission)
+    assert_role(r, name, parents, default_evaluator)
 
     names = manager.get_names()
     assert len(names) == 3
@@ -143,10 +143,10 @@ def test_get_not_existing_role(manager):
         manager.get_role("bar")
 
 
-def assert_role(role_instance, name, parents, default_permission):
+def assert_role(role_instance, name, parents, default_evaluator):
     assert isinstance(role_instance, role.Role)
     assert role_instance.name == name
-    assert role_instance.default_permission is default_permission
+    assert role_instance.default_evaluator is default_evaluator
 
     if parents is None:
         assert role_instance is tuple()

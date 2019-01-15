@@ -22,7 +22,7 @@ def test_init_simple():
 
     assert r.name == name
     assert r.parents == tuple()
-    assert r.default_permission is None
+    assert r.default_evaluator is None
 
 
 def test_init_full_args():
@@ -31,12 +31,12 @@ def test_init_full_args():
     """
     name = "my_role"
     parents = (mock.Mock(), )
-    default_permission = mock.Mock()
+    default_evaluator = mock.Mock()
 
-    r = role.Role(name, parents, default_permission)
+    r = role.Role(name, parents, default_evaluator)
     assert r.name == name
     assert r.parents == parents
-    assert r.default_permission is default_permission
+    assert r.default_evaluator is default_evaluator
 
 
 def test_init_full_kwargs():
@@ -45,12 +45,12 @@ def test_init_full_kwargs():
     """
     name = "my_role"
     parents = (mock.Mock(), )
-    default_permission = mock.Mock()
+    default_evaluator = mock.Mock()
 
-    r = role.Role(name, parents=parents, default_permission=default_permission)
+    r = role.Role(name, parents=parents, default_evaluator=default_evaluator)
     assert r.name == name
     assert r.parents == parents
-    assert r.default_permission is default_permission
+    assert r.default_evaluator is default_evaluator
 
 
 def test_readonly_properties():
@@ -66,4 +66,4 @@ def test_readonly_properties():
         r.parents = mock.Mock()
 
     with pytest.raises(AttributeError):
-        r.default_permission = mock.Mock()
+        r.default_evaluator = mock.Mock()

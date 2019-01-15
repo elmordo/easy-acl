@@ -46,24 +46,24 @@ class Role(object):
     Args:
         name (str): Role name.
         parents (Optional[Iterable[Role]]): Parent roles.
-        default_permission (Optional[Callable[[Role, str, int,
+        default_evaluator (Optional[Callable[[Role, str, int,
             easy_acl.rule.AbstractRule], bool]]): Default permission resolver.
 
     Attributes:
         name (str): Role name.
         parents (Tuple[Role]): Parent roles.
-        default_permission (Optional[Callable[[Role, str, int,
+        default_evaluator (Optional[Callable[[Role, str, int,
             easy_acl.rule.AbstractRule], bool]]): Default permission resolver.
 
     """
 
-    def __init__(self, name, parents=None, default_permission=None):
+    def __init__(self, name, parents=None, default_evaluator=None):
         if parents is None:
             parents = []
 
         self.__name = name
         self.__parents = tuple(parents)
-        self.__default_permission = default_permission
+        self.__default_evaluator = default_evaluator
 
     @property
     def name(self):
@@ -74,8 +74,8 @@ class Role(object):
         return self.__parents
 
     @property
-    def default_permission(self):
-        return self.__default_permission
+    def default_evaluator(self):
+        return self.__default_evaluator
 
 
 class RoleManager(object):
@@ -101,13 +101,13 @@ class RoleManager(object):
         self._assert_name_not_exists(role.name)
         self._roles.append(role)
 
-    def create_role(self, name, parent_names=None, default_permission=None):
+    def create_role(self, name, parent_names=None, default_evaluator=None):
         """Create new role instance, add it to container and return it
 
         Args:
             name (str): Name of the role.
             parent_names (Optional[Iterable[str]]): Names of the parent roles.
-            default_permission (Optional[Callable[[Role, str, int,
+            default_evaluator (Optional[Callable[[Role, str, int,
                 easy_acl.rule.AbstractRule], bool]]): Default permission.
 
         Returns:
@@ -123,7 +123,7 @@ class RoleManager(object):
         else:
             parents = None
 
-        role = Role(name, parents, default_permission)
+        role = Role(name, parents, default_evaluator)
         self.add_role(role)
 
         return role
