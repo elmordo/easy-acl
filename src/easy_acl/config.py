@@ -54,7 +54,7 @@ class AclConfigurator(object):
     def __init__(self):
         self.role_klass = roles.Role
         self.rule_factories = self._create_rule_factories()
-        self.evaluators_lookup = self._create_evaluator_factories()
+        self.evaluators_lookup = self._create_evaluator_lookup()
         self.roles = []
         self.default_role_evaluators = {}
         self.rules = collections.defaultdict(list)
@@ -103,6 +103,10 @@ class AclConfigurator(object):
 
         Args:
             instance (easy_acl.acl.Acl): Instance to setup.
+
+        Raises:
+            ValueError: Config is invalid.
+            KeyError: Missig reference to evaluator type or rule type.
 
         """
         self._create_roles(instance)
@@ -205,6 +209,15 @@ class AclConfigurator(object):
 
     @staticmethod
     def _import_factory(pth):
+        """Import factory function from given full qualified name.
+
+        Args:
+            pth (str): Name of the factory.
+
+        Returns:
+            Type: Factory.
+
+        """
         path_parts = pth.split(".")
         factory_name = path_parts.pop()
         factory_package = ".".join(path_parts)
@@ -214,25 +227,53 @@ class AclConfigurator(object):
 
     @staticmethod
     def _read_config(filename):
+        """Read config from the file.
+
+        Args:
+            filename (str): Filename to read config from.
+
+        Returns:
+            configparser.ConfigParser: Config.
+
+        """
         parser = configparser.ConfigParser()
         parser.read(filename)
         return parser
 
     @staticmethod
     def _create_rule_factories():
+        """Create default (built-in) rule factories.
+
+        Returns:
+            Dict[str, Type[rules.AbstractRule]]: Lookup with default factories.
+
+        """
         return {
             "simple": rules.Simple,
             "wildcardending": rules.WildcardEnding
         }
 
     @staticmethod
-    def _create_evaluator_factories():
+    def _create_evaluator_lookup():
+        """Create lookup with built-in evaluators.
+
+        Returns:
+            Dict[str, Callable[[easy_acl.role.Role, str, int, AbstractRule],
+                bool]]: Lookup with evaluator functions.
+
+        """
         return {
             "allow": evaluators.allow,
             "deny": evaluators.deny
         }
 
     def _create_roles(self, instance):
+        """Create roles and write them into Acl instance.
+
+        Args:
+            instance (easy_acl.acl.Acl): Acl instance to update.
+
+        """
         role_lookup = {x.name: x for x in self.roles}
         role_order = self._get_role_order()
 
@@ -242,6 +283,21 @@ class AclConfigurator(object):
             instance.roles.add_role(role, instance.roles)
 
     def _create_role_from_definition(self, role_definition, role_manager):
+        """Create new role from the definition.
+
+        Type in `self.role_klass` is used as role.
+
+        Args:
+            role_definition (RoleDefinition): Role definition.
+            role_manager (easy_acl.role.RoleManager): Role manager instance.
+
+        Returns:
+            easy_acl.role.Role: Role instance.
+
+        Raises:
+            ValueError: Some parent role was not found.
+
+        """
         name = role_definition.name
         parents = [role_manager.get_role(p) for p in role_definition.parents]
         evaluator = self._select_default_role_evaluator(role_definition)
@@ -250,7 +306,16 @@ class AclConfigurator(object):
         return role
 
     def _select_default_role_evaluator(self, role_definition):
-        """
+        """Select default evaluator for role.
+
+        Args:
+            role_definition (RoleDefinition): Role definition.
+
+        Returns:
+            Optional[Callable[[easy_acl.role.Role, str, int, AbstractRule],
+                bool]]: Default evaluator for role or None if no default evaluator
+                    is set.
+
         Raises:
             KeyError: Invalid default rule identifier.
 
@@ -268,6 +333,15 @@ class AclConfigurator(object):
         return evaluator
 
     def _get_role_order(self):
+        """Get role names ordered by their inheritance.
+
+        Returns:
+            List[str]: Role names.
+
+        Raises:
+            ValueError: Cycle or missing link found in resolving process.
+
+        """
         result = []
         open_list = list(self.roles)
         do_step = True
@@ -283,6 +357,22 @@ class AclConfigurator(object):
         return result
 
     def _do_ordering_step(self, known_order, open_list):
+        """Resolve roles with fulfilled dependencies.
+
+        Role with all parents in known_order list is marked as resolved.
+
+        Args:
+            known_order (List[str]): Roles with known order.
+            open_list (List[RoleDefinition]): List of role definitions waiting
+                to be resolved.
+
+        Returns:
+            Tuple[List[str], List[RoleDefinition]]: Items from known_order list
+                extended by items resolved in current step and values for next
+                step open_list.
+
+        """
+
         result = list(known_order)
         new_open = []
 
@@ -295,6 +385,16 @@ class AclConfigurator(object):
         return result, new_open
 
     def _is_all_parents_resolved(self, known_order, parents):
+        """Test if all roles in parent list are in known_order list.
+
+        Args:
+            known_order (List[str]): List of resolved role names.
+            parents (Tuple[str]): List of parents.
+
+        Returns:
+            bool: True if all parents are in known_order list, False otherwise.
+
+        """
         for p in parents:
             if p not in known_order:
                 return False
@@ -302,15 +402,44 @@ class AclConfigurator(object):
         return True
 
     def _create_rules(self, instance):
+        """Create rules and write them into instance.
+
+        Args:
+            instance (easy_acl.acl.Acl): The Acl instance.
+
+        """
         for role_name, rule_list in self.rules.items():
             self._create_rules_for_role(instance, role_name, rule_list)
 
     def _create_rules_for_role(self, instance, role_name, rule_list):
+        """Create rules for one role and write them into instance.
+
+        Args:
+            instance (easy_acl.acl.Acl): The Acl instance.
+            role_name (str): Name of the role to create rules for.
+            rule_list (List[RuleDefinition]): Definitions of rules.
+
+        Raises:
+            KeyError: Rule factory or evaluator was not found.
+
+        """
         for rule_definition in rule_list:
             rule = self._create_rule_from_definition(rule_definition)
             instance.add_rule(role_name, rule)
 
     def _create_rule_from_definition(self, rule_definition):
+        """Create one rule from definition.
+
+        Args:
+            rule_definition (RuleDefinitio): Definition of the rule.
+
+        Returns:
+            easy_acl.rule.AbstractRule: Rule instance.
+
+        Raises:
+            KeyError: Rule factory or evaluator was not found.
+
+        """
         rule_factory = self.rule_factories[rule_definition.rule_type]
         evaluator = self.evaluators_lookup[rule_definition.evaluator_type]
         return rule_factory(rule_definition.definition, evaluator)
