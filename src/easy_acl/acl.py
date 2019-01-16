@@ -47,6 +47,11 @@ class Acl(object):
     def default_evaluator(self):
         return self.__default_evaluator
 
+    @property
+    def rules(self):
+        return dict(self.__rules.items())
+
+
     def clear_cache(self):
         """Clear internal cache.
 

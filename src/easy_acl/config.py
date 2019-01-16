@@ -64,7 +64,7 @@ class AclConfigurator(object):
         self.default_role_evaluators = {}
         self.rules = collections.defaultdict(list)
 
-    def create_new_instance(self):
+    def create_new_acl(self):
         """Create new Acl instance and setup it.
 
         Returns:
@@ -291,8 +291,8 @@ class AclConfigurator(object):
 
         for rn in role_order:
             role_definition = role_lookup[rn]
-            role = self._create_role_from_definition(role_definition)
-            instance.roles.add_role(role, instance.roles)
+            role = self._create_role_from_definition(role_definition, instance.roles)
+            instance.roles.add_role(role)
 
     def _create_role_from_definition(self, role_definition, role_manager):
         """Create new role from the definition.

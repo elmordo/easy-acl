@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 
+import mock
 import os
 
 import easy_acl.config as config
@@ -51,6 +52,15 @@ def test_load_data_from_config_file():
     assert_config_roles(instance)
     assert_config_default_role_evaluators(instance)
     assert_config_rules(instance)
+
+
+def test_create_new_acl():
+    instance = config.AclConfigurator()
+    instance.load_data_from_config_file(SAMPLE_CONFIG_PATH)
+
+    acl = instance.create_new_acl()
+
+    assert_acl_roles(acl)
 
 
 def assert_config_rule_factories(instance):
@@ -136,9 +146,36 @@ def assert_config_rules(instance):
         assert len(rl) == len(expected_rules[rn])
 
         for rule_config, expected in zip(rl, expected_rules[rn]):
-            rule_config.definition == expected[0]
-            rule_config.rule_type == expected[1]
-            rule_config.evaluator_type == expected[2]
+            assert rule_config.definition == expected[0]
+            assert rule_config.rule_type == expected[1]
+            assert rule_config.evaluator_type == expected[2]
+
+
+def assert_acl_roles(acl):
+    role_manager = acl.roles
+    assert len(role_manager.get_names()) == 4
+
+    names = ["user", "admin", "antimulti", "presenter"]
+    lookup = {n: role_manager.get_role(n) for n in names}
+
+    for n in names:
+        r = lookup[n]
+
+        if n == "user":
+            assert r.default_evaluator is None
+            assert r.parents == tuple()
+        elif n == "presenter":
+            assert r.default_evaluator is None
+            assert r.parents == tuple()
+        elif n == "antimulti":
+            assert r.default_evaluator is None
+            assert r.parents == (lookup["presenter"],)
+        elif n == "admin":
+            assert r.default_evaluator is evaluators.allow
+            assert r.parents == (lookup["user"], lookup["presenter"])
+        else:
+            assert False, "Unknown role '{}'".format(n)
+
 
 
 SAMPLE_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "sample_config.conf")
