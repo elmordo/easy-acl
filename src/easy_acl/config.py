@@ -96,11 +96,18 @@ class AclConfigurator(object):
             config [Dict[str, Dict[str, str]]]: Config data.
 
         """
-        self.setup_rule_types(config.get(self.SECTION_RULE_TYPES, {}))
-        self.setup_evaluators_types(config.get(self.SECTION_EVALUDATOR_TYPES, {}))
-        self.setup_global_settings(config.get(self.SECTION_GLOBAL_SETTINGS, {}))
-        self.setup_roles(config.get(self.SECTION_ROLES, {}))
-        self.setup_role_evaluators(config.get(self.SECTION_DEFAULT_ROLE_EVALUATORS, {}))
+        def try_config(section, method):
+            try:
+                method(config[section])
+            except KeyError:
+                pass
+
+        try_config(self.SECTION_RULE_TYPES, self.setup_rule_types)
+        try_config(self.SECTION_EVALUDATOR_TYPES, self.setup_evaluators_types)
+        try_config(self.SECTION_GLOBAL_SETTINGS, self.setup_global_settings)
+        try_config(self.SECTION_ROLES, self.setup_roles)
+        try_config(self.SECTION_DEFAULT_ROLE_EVALUATORS, self.setup_role_evaluators)
+
         self.setup_rules(config)
 
     def setup_instance(self, instance):
@@ -139,7 +146,7 @@ class AclConfigurator(object):
 
         """
         for k, v in config.items():
-            self.rule_factories[k] = self._import_factory(v)
+            self.evaluators_lookup[k] = self._import_factory(v)
 
     def setup_global_settings(self, config):
         """Setup global ACL settings from the config data.
@@ -179,7 +186,7 @@ class AclConfigurator(object):
             config (Dict[str, str]): Config data.
 
         """
-        for k, v in config:
+        for k, v in config.items():
             self.default_role_evaluators[k] = v
 
     def setup_rules(self, config):
