@@ -5,7 +5,12 @@
 
 from __future__ import absolute_import
 
-import configparser
+try:
+    import configparser
+except ImportError:
+    # the python 2 fix
+    import ConfigParser as configparser
+
 import collections
 import importlib
 import re
