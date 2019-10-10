@@ -51,7 +51,6 @@ class Acl(object):
     def rules(self):
         return dict(self.__rules.items())
 
-
     def clear_cache(self):
         """Clear internal cache.
 

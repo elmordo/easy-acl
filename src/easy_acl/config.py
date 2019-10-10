@@ -63,6 +63,7 @@ class AclConfigurator(object):
         self.roles = []
         self.default_role_evaluators = {}
         self.rules = collections.defaultdict(list)
+        self.raw_config = None
 
     def create_new_acl(self):
         """Create new Acl instance and setup it.
@@ -87,6 +88,7 @@ class AclConfigurator(object):
 
         """
         config = self._read_config(filename)
+        self.raw_config = config
         self.process_dict_like_config(config)
 
     def process_dict_like_config(self, config):
