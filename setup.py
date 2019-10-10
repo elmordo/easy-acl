@@ -10,11 +10,11 @@ from setuptools import setup
 __copyright__ = "Copyright (c) 2015-2018 Ing. Petr Jindra. All Rights Reserved."
 
 
-SRC_DIR="src"
+SRC_DIR = "src"
 
 
 def get_version():
-    return "0.1"
+    return "0.1.1"
 
 
 setup(
